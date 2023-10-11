@@ -1,37 +1,52 @@
+import { Button } from "@nextui-org/button";
 import { invoke } from "@tauri-apps/api/tauri";
+import { useDarkMode } from "usehooks-ts";
 import "./App.css";
-import reactLogo from "./assets/react.svg";
+import useTwitchToken, { twitchTokenSchema } from "./hooks/use-twitch-token";
+import { safeParse } from "valibot";
 
 function App() {
+  const { isDarkMode } = useDarkMode();
+  const { tokens, setTokens } = useTwitchToken();
+
+  const parseUrlParamsToTokens = (url: string) => {
+    const params = new URLSearchParams(url);
+
+    const data: Record<string, string | number> = {};
+    for (const [key, value] of params) {
+      if (key === "expires_in") {
+        data[key] = Number(value);
+      } else {
+        data[key] = value;
+      }
+    }
+
+    return safeParse(twitchTokenSchema, data);
+  };
+
   const login = async () => {
     try {
       const sessionToken = await invoke<string>("authenticate");
-      localStorage.setItem("session_token", sessionToken);
-      console.log(sessionToken);
+      const tokens = parseUrlParamsToTokens(sessionToken);
+      if (!tokens.success) {
+        console.error(tokens.issues);
+        throw new Error("Error al obtener los tokens");
+      }
+
+      setTokens(tokens.output);
     } catch (e) {
       console.log(e);
     }
   };
 
   return (
-    <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <button onClick={login}>Iniciar sesión con Twitch</button>
+    <div
+      className={`${
+        isDarkMode ? "dark" : ""
+      } text-foreground bg-background min-h-screen flex flex-col justify-center items-center`}
+    >
+      {!tokens && <Button onClick={login}>Iniciar sesión con Twitch</Button>}
+      <p>Logged In</p>
     </div>
   );
 }
