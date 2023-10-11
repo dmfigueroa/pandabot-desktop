@@ -45,8 +45,11 @@ function App() {
         isDarkMode ? "dark" : ""
       } text-foreground bg-background min-h-screen flex flex-col justify-center items-center`}
     >
-      {!tokens && <Button onClick={login}>Iniciar sesión con Twitch</Button>}
-      <p>Logged In</p>
+      {tokens ? (
+        <p>Logged In</p>
+      ) : (
+        <Button onClick={login}>Iniciar sesión con Twitch</Button>
+      )}
     </div>
   );
 }

@@ -35,34 +35,24 @@ async fn authenticate(app_handle: AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 fn store_token(token: &str) -> Option<()> {
-    let entry = match Entry::new("pandabot", "token") {
-        Ok(entry) => entry,
+    match Entry::new("pandabot", "token") {
+        Ok(entry) => match entry.set_password(&token) {
+            Ok(_) => Some(()),
+            Err(_) => None,
+        },
         Err(_) => return None,
-    };
-
-    let token_json = serde_json::to_string(token).expect("Failed to serialize token");
-    match entry.set_password(&token_json) {
-        Ok(_) => Some(()),
-        Err(_) => None,
     }
 }
 
 #[tauri::command]
 fn load_token() -> Option<String> {
-    let entry = match Entry::new("pandabot", "token") {
-        Ok(entry) => entry,
+    match Entry::new("pandabot", "token") {
+        Ok(entry) => match entry.get_password() {
+            Ok(token) => Some(token),
+            Err(_) => return None,
+        },
         Err(_) => return None,
-    };
-
-    let token_json = match entry.get_password() {
-        Ok(token_json) => token_json,
-        Err(_) => return None,
-    };
-
-    return match serde_json::from_str(&token_json) {
-        Ok(token) => Some(token),
-        Err(_) => None,
-    };
+    }
 }
 
 fn main() {

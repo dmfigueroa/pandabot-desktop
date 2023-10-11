@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api";
-import { useLocalStorage } from "usehooks-ts";
+import { useEffect, useState } from "react";
 import { Output, number, object, safeParse, string } from "valibot";
 
 export const twitchTokenSchema = object({
@@ -10,16 +10,23 @@ export const twitchTokenSchema = object({
 type TwitchToken = Output<typeof twitchTokenSchema>;
 
 export default function useTwitchToken() {
-  const [tokens, setToken] = useLocalStorage<TwitchToken | null>("token", null);
+  const [tokens, setToken] = useState<TwitchToken | null>(null);
 
-  invoke("load_token").then((token) => {
-    const tokenResult = safeParse(twitchTokenSchema, token);
-    if (tokenResult.success) setToken(tokenResult.output);
-  });
+  useEffect(() => {
+    invoke("load_token").then((token) => {
+      if (!token) return;
+      const tokenResult = safeParse(
+        twitchTokenSchema,
+        JSON.parse(token as string)
+      );
+      if (tokenResult.success) setToken(tokenResult.output);
+    });
+  }, []);
 
   const setTokens = (token: TwitchToken) => {
-    invoke("store_token", token);
-    setToken(token);
+    invoke("store_token", { token: JSON.stringify(token) }).then(() => {
+      setToken(token);
+    });
   };
 
   return { tokens, setTokens };
