@@ -1,9 +1,9 @@
 import { Button } from "@nextui-org/button";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useDarkMode } from "usehooks-ts";
-import "./App.css";
-import useTwitchToken, { twitchTokenSchema } from "./hooks/use-twitch-token";
 import { safeParse } from "valibot";
+import "./App.css";
+import { twitchTokenSchema, useTwitchToken } from "./hooks/use-twitch-token";
 
 function App() {
   const { isDarkMode } = useDarkMode();
@@ -12,14 +12,8 @@ function App() {
   const parseUrlParamsToTokens = (url: string) => {
     const params = new URLSearchParams(url);
 
-    const data: Record<string, string | number> = {};
-    for (const [key, value] of params) {
-      if (key === "expires_in") {
-        data[key] = Number(value);
-      } else {
-        data[key] = value;
-      }
-    }
+    const data: Record<string, string | Date> = {};
+    for (const [key, value] of params) data[key] = value;
 
     return safeParse(twitchTokenSchema, data);
   };
@@ -43,12 +37,12 @@ function App() {
     <div
       className={`${
         isDarkMode ? "dark" : ""
-      } text-foreground bg-background min-h-screen flex flex-col justify-center items-center`}
+      } text-foreground bg-background min-h-screen flex flex-col p-8 items-center`}
     >
       {tokens ? (
         <p>Logged In</p>
       ) : (
-        <Button onClick={login}>Iniciar sesión con Twitch</Button>
+        <Button onClick={() => void login()}>Iniciar sesión con Twitch</Button>
       )}
     </div>
   );

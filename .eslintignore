@@ -1,0 +1,4 @@
+vite.config.ts
+.eslintrc.cjs
+tests/
+tailwind.config.ts

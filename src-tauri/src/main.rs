@@ -57,7 +57,6 @@ fn load_token() -> Option<String> {
 
 fn main() {
     tauri::Builder::default()
-        .manage(keyring::Entry::new("pandabot", "token"))
         .invoke_handler(tauri::generate_handler![
             authenticate,
             store_token,
